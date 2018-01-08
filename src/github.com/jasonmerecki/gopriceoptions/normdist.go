@@ -2,9 +2,48 @@ package gopriceoptions
 
 import (
 	"math"
+	"strconv"
 )
+	
+var sqrt2 float64 = math.Pow(2, 0.5)
+var toomanydev float64 = 8
 
-func ErrFunc(z float64) float64 {
+type normdist struct {
+	stddev float64
+	mean float64
+	stddevsqpi float64
+	twostddevsq float64
+}
+
+func NewNormdist (m float64, s float64) normdist {
+	n := *new(normdist)
+	n.stddev = s
+	n.mean = m
+	n.stddevsqpi = s * math.Pow( (2 * math.Pi), 0.5)
+	if s == 1 {
+		n.twostddevsq = 2 
+	} else {
+		n.twostddevsq = 2 * (s * s)
+	}
+	return n
+}
+
+func (n normdist) String() string {
+	return "normdist stddev:" + strconv.FormatFloat(n.stddev , 'e', -1, 64) + ", mean=" + strconv.FormatFloat(n.mean , 'e', -1, 64)  + "\n" 
+}
+
+func (n normdist) Pdf(x float64) float64 {
+	var expon float64
+	if n.mean == 0 {
+		expon = -(x*x) / n.twostddevsq
+	} else {
+		expon = -(math.Pow((x - n.mean),2)) / n.twostddevsq
+	}
+	probDist := math.Exp(expon) / n.stddevsqpi
+	return probDist
+}
+
+func ErrFunc (z float64) float64 {
 	var t float64
 	t = 1.0 / (1.0 + 0.5*math.Abs(z))
 	ans := 1 - t * math.Exp( -z*z   -   1.26551223 +
