@@ -16,7 +16,7 @@ func TestErrFunc(t *testing.T) {
 
 func TestCreateNormdist(t *testing.T) {
 	n := NewNormdist(34.3, 3.22)
-	fmt.Printf("Got normdist object %v", n)
+	fmt.Printf("Got normdist object {%v} \n", n)
 	// at 37.5 the pdf is 0.0756129282351069 
 }
 

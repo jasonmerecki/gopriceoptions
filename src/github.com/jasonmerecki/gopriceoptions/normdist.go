@@ -2,7 +2,7 @@ package gopriceoptions
 
 import (
 	"math"
-	"strconv"
+	"fmt"
 )
 	
 var sqrt2 float64 = math.Pow(2, 0.5)
@@ -29,7 +29,8 @@ func NewNormdist (m float64, s float64) normdist {
 }
 
 func (n normdist) String() string {
-	return "normdist stddev:" + strconv.FormatFloat(n.stddev , 'e', -1, 64) + ", mean=" + strconv.FormatFloat(n.mean , 'e', -1, 64)  + "\n" 
+	s := fmt.Sprintf("normdist {mean: %f, stddev: %f}", n.mean, n.stddev)
+	return s; 
 }
 
 func (n normdist) Pdf(x float64) float64 {
