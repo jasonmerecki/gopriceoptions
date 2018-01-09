@@ -15,10 +15,11 @@ type normdist struct {
 	twostddevsq float64
 }
 
-func NewNormdist (m float64, s float64) normdist {
-	n := *new(normdist)
-	n.stddev = s
-	n.mean = m
+func NewNormdist (m float64, s float64) *normdist {
+	n := &normdist {
+		stddev: s,
+		mean: m,
+	}
 	n.stddevsqpi = s * math.Pow( (2 * math.Pi), 0.5)
 	if s == 1 {
 		n.twostddevsq = 2 
@@ -28,12 +29,20 @@ func NewNormdist (m float64, s float64) normdist {
 	return n
 }
 
-func (n normdist) String() string {
+func (n *normdist) String() string {
 	s := fmt.Sprintf("normdist {mean: %f, stddev: %f}", n.mean, n.stddev)
 	return s; 
 }
 
-func (n normdist) Pdf(x float64) float64 {
+func (n *normdist) Mean() float64 {
+	return n.mean
+} 
+
+func (n *normdist) Stdev() float64 {
+	return n.stddev
+} 
+
+func (n *normdist) Pdf(x float64) float64 {
 	var expon float64
 	if n.mean == 0 {
 		expon = -(x*x) / n.twostddevsq
