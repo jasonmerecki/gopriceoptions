@@ -53,7 +53,21 @@ func (n *normdist) Pdf(x float64) float64 {
 	return probDist
 }
 
-func ErrFunc (z float64) float64 {
+func (n *normdist) Cdf(x float64) float64 {
+	dist := x - n.mean
+	if math.Abs(dist) > toomanydev * n.stddev {
+		if x < n.mean {
+			return 0.0
+		} else {
+			return 1.0
+		}
+	}
+	errf := Errf( dist / (n.stddev * sqrt2))
+	cdf := 0.5 * (1.0 + errf)
+	return cdf
+}	
+
+func Errf (z float64) float64 {
 	var t float64
 	t = 1.0 / (1.0 + 0.5*math.Abs(z))
 	ans := 1 - t * math.Exp( -z*z   -   1.26551223 +
