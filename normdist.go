@@ -85,3 +85,7 @@ func Errf (z float64) float64 {
 	}
 	return -ans
 }
+
+var Stdnorm *normdist = NewNormdist(0.0, 1.0)
+
+
