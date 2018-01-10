@@ -1,8 +1,8 @@
 package gopriceoptions
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestErrFunc(t *testing.T) {
@@ -25,7 +25,7 @@ func TestNormPdf(t *testing.T) {
 	s := 3.22
 	n := NewNormdist(m, s)
 	p := n.Pdf(37.5)
-	epdf := 0.0756129282351069 
+	epdf := 0.0756129282351069
 	msg := fmt.Sprintf("with mean=%f and stddev=%f, for pdf, got %f, expected %f\n", m, s, p, epdf)
 	if p != epdf {
 		t.Error(msg)
@@ -75,6 +75,3 @@ func TestStdCdf(t *testing.T) {
 	}
 	fmt.Print(msg)
 }
-
-
-
