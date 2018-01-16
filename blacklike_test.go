@@ -37,3 +37,20 @@ func TestBlackPut1(t *testing.T) {
 	fmt.Print(msg)
 
 }
+
+
+func TestBSDelta(t *testing.T) {
+	s := 1177.62
+	k := 1195.00
+	time := 0.084931506849315 // date 12/19/2017, expiration 1/19/2018, 31 days
+	v := 0.20
+	r := 0.0135
+	q := 0.0
+	delta := BSDelta("C", s, k, time, v, r, q)
+	edelta := 0.41974
+	msg := fmt.Sprintf("TestBlackDetla1, got %f, expected %f\n", delta, edelta)
+	if delta != edelta {
+		t.Error(msg)
+	}
+	fmt.Print(msg)
+}

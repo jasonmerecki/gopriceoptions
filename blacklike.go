@@ -48,3 +48,35 @@ func d2f(d1 float64, vt float64) float64 {
 	d2 := d1 - vt
 	return d2
 }
+
+func BSDelta(otype string, s float64, k float64, t float64, v float64, r float64, q float64) float64 {
+	var zo float64
+	if "P" == otype {
+		zo = -1
+	}
+	if "C" == otype {
+		zo = 0
+	}
+	drq := math.Exp(-q * t)
+	vt := (v * (math.Sqrt(t)))
+	d1 := d1f(s, k, t, v, r, q, vt)
+	cdfd1 := Stdnorm.Cdf(d1)
+	delta := drq * (cdfd1 - zo)
+	return delta
+}
+
+
+/*
+public static double bsDelta (String type, double s, double k, double v,
+			double t, double r, double q) {
+	    double drq = Math.exp(-q*t);
+	    double zo = ("P".equals(type)) ? -1d : 0d;
+	    double vt = (v * (Math.sqrt(t)));
+	    double d1 = d1(s, k, t, v, r, q, vt);
+	    double delta = drq * (cdf(d1) - zo);
+	    return delta;
+	}
+			
+*/
+			
+
