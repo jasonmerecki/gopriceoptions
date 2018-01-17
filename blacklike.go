@@ -61,7 +61,7 @@ func BSDelta(otype string, s float64, k float64, t float64, v float64, r float64
 	vt := (v * (math.Sqrt(t)))
 	d1 := d1f(s, k, t, v, r, q, vt)
 	cdfd1 := Stdnorm.Cdf(d1)
-	delta := drq * (cdfd1 - zo)
+	delta := drq * (cdfd1 + zo)
 	return delta
 }
 

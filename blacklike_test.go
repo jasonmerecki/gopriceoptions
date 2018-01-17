@@ -47,8 +47,8 @@ func TestBSDelta(t *testing.T) {
 	r := 0.0135
 	q := 0.0
 	delta := BSDelta("C", s, k, time, v, r, q)
-	edelta := 0.41974
-	msg := fmt.Sprintf("TestBlackDetla1, got %f, expected %f\n", delta, edelta)
+	edelta := 0.4197454548230388
+	msg := fmt.Sprintf("TestBSDelta, got %f, expected %f\n", delta, edelta)
 	if delta != edelta {
 		t.Error(msg)
 	}
