@@ -1,5 +1,8 @@
 package gopriceoptions
 
+// references:
+// https://github.com/chobie/go-gaussian/blob/master/gaussian.go
+
 import (
 	"fmt"
 	"math"
