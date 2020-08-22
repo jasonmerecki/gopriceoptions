@@ -2,114 +2,112 @@ package gopriceoptions
 
 import (
 	"math"
-	"strings"
 )
 
 var sqtwopi float64 = math.Sqrt(2 * math.Pi)
 var IVPrecision = 0.00001
 
-func PriceBlackScholes(otype string, s float64, k float64, t float64, v float64, r float64, q float64) float64 {
-	otype = strings.ToUpper(otype)
+func PriceBlackScholes(callType bool, underlying float64, strike float64, timeToExpiration float64, volatility float64, riskFreeInterest float64, dividend float64) float64 {
+
 	var sign float64
-	if "C" == otype {
-		if t <= 0 {
-			return math.Abs(s - k)
+	if callType {
+		if timeToExpiration <= 0 {
+			return math.Abs(underlying - strike)
 		}
 		sign = 1
-	}
-	if "P" == otype {
-		if t <= 0 {
-			return math.Abs(k - s)
+	} else {
+		if timeToExpiration <= 0 {
+			return math.Abs(strike - underlying)
 		}
 		sign = -1
 	}
+
 	if sign == 0 {
 		return 0.0
 	}
 
-	re := math.Exp(-r * t)
-	qe := math.Exp(-q * t)
-	vt := (v * (math.Sqrt(t)))
-	d1 := d1f(s, k, t, v, r, q, vt)
+	re := math.Exp(-riskFreeInterest * timeToExpiration)
+	qe := math.Exp(-dividend * timeToExpiration)
+	vt := volatility * (math.Sqrt(timeToExpiration))
+	d1 := d1f(underlying, strike, timeToExpiration, volatility, riskFreeInterest, dividend, vt)
 	d2 := d2f(d1, vt)
 	d1 = sign * d1
 	d2 = sign * d2
 	nd1 := Stdnorm.Cdf(d1)
 	nd2 := Stdnorm.Cdf(d2)
 
-	bsprice := sign * ((s * qe * nd1) - (k * re * nd2))
+	bsprice := sign * ((underlying * qe * nd1) - (strike * re * nd2))
 	return bsprice
 }
 
-func d1f(s float64, k float64, t float64, v float64, r float64, q float64, vt float64) float64 {
-	d1 := math.Log(s/k) + (t * (r - q + ((v * v) * 0.5)))
-	d1 = d1 / vt
+func d1f(underlying float64, strike float64, timeToExpiration float64, volatility float64, riskFreeInterest float64, dividend float64, volatilityWithExpiration float64) float64 {
+	d1 := math.Log(underlying/strike) + (timeToExpiration * (riskFreeInterest - dividend + ((volatility * volatility) * 0.5)))
+	d1 = d1 / volatilityWithExpiration
 	return d1
 }
 
-func d2f(d1 float64, vt float64) float64 {
-	d2 := d1 - vt
+func d2f(d1 float64, volatilityWithExpiration float64) float64 {
+	d2 := d1 - volatilityWithExpiration
 	return d2
 }
-
-func d1pdff(s float64, k float64, v float64, t float64, r float64, q float64) float64 {
-	vt := (v * (math.Sqrt(t)))
-	d1 := d1f(s, k, t, v, r, q, vt)
+func d1pdff(underlying float64, strike float64, timeToExpiration float64, volatility float64, riskFreeInterest float64, dividend float64) float64 {
+	vt := volatility * (math.Sqrt(timeToExpiration))
+	d1 := d1f(underlying, strike, timeToExpiration, volatility, riskFreeInterest, dividend, vt)
 	d1pdf := math.Exp(-(d1 * d1) * 0.5)
 	d1pdf = d1pdf / sqtwopi
 	return d1pdf
 }
 
-func BSDelta(otype string, s float64, k float64, t float64, v float64, r float64, q float64) float64 {
+func BSDelta(callType bool, underlying float64, strike float64, timeToExpiration float64, volatility float64, riskFreeInterest float64, dividend float64) float64 {
 	var zo float64
-	if "P" == otype {
+	if !callType {
 		zo = -1
-	}
-	if "C" == otype {
+	} else {
 		zo = 0
 	}
-	drq := math.Exp(-q * t)
-	vt := (v * (math.Sqrt(t)))
-	d1 := d1f(s, k, t, v, r, q, vt)
+
+	drq := math.Exp(-dividend * timeToExpiration)
+	vt := volatility * (math.Sqrt(timeToExpiration))
+	d1 := d1f(underlying, strike, timeToExpiration, volatility, riskFreeInterest, dividend, vt)
 	cdfd1 := Stdnorm.Cdf(d1)
 	delta := drq * (cdfd1 + zo)
 	return delta
 }
 
-func BSVega(s float64, k float64, t float64, v float64, r float64, q float64) float64 {
-	d1pdf := d1pdff(s, k, v, t, r, q)
-	drq := math.Exp(-q * t)
-	sqt := math.Sqrt(t)
-	vega := (d1pdf) * drq * s * sqt * 0.01
+func BSVega(underlying float64, strike float64, timeToExpiration float64, volatility float64, riskFreeInterest float64, dividend float64) float64 {
+	d1pdf := d1pdff(underlying, strike, timeToExpiration, volatility, riskFreeInterest, dividend)
+	drq := math.Exp(-dividend * timeToExpiration)
+	sqt := math.Sqrt(timeToExpiration)
+	vega := (d1pdf) * drq * underlying * sqt * 0.01
 	return vega
 }
 
-func BSGamma(s float64, k float64, t float64, v float64, r float64, q float64) float64 {
-	drq := math.Exp(-q * t)
-	drd := (s * v * math.Sqrt(t))
-	d1pdf := d1pdff(s, k, v, t, r, q)
+func BSGamma(underlying float64, strike float64, timeToExpiration float64, volatility float64, riskFreeInterest float64, dividend float64) float64 {
+	drq := math.Exp(-dividend * timeToExpiration)
+	drd := underlying * volatility * math.Sqrt(timeToExpiration)
+	d1pdf := d1pdff(underlying, strike, timeToExpiration, volatility, riskFreeInterest, dividend)
 	gamma := (drq / drd) * d1pdf
 	return gamma
 }
 
-func BSTheta(otype string, s float64, k float64, t float64, v float64, r float64, q float64) float64 {
+func BSTheta(callType bool, underlying float64, strike float64, timeToExpiration float64, volatility float64, riskFreeInterest float64, dividend float64) float64 {
 
 	var sign float64
-	if "P" == otype {
+	if !callType {
 		sign = -1
-	}
-	if "C" == otype {
+	} else {
 		sign = 1
 	}
-	sqt := math.Sqrt(t)
-	drq := math.Exp(-q * t)
-	dr := math.Exp(-r * t)
-	d1pdf := d1pdff(s, k, v, t, r, q)
-	twosqt := 2 * sqt
-	p1 := -1 * ((s * v * drq) / twosqt) * d1pdf
 
-	vt := (v * (sqt))
-	d1 := d1f(s, k, t, v, r, q, vt)
+	sqt := math.Sqrt(timeToExpiration)
+	drq := math.Exp(-dividend * timeToExpiration)
+	dr := math.Exp(-riskFreeInterest * timeToExpiration)
+	d1pdf := d1pdff(underlying, strike, timeToExpiration, volatility, riskFreeInterest, dividend)
+	twosqt := 2 * sqt
+	p1 := -1 * ((underlying * volatility * drq) / twosqt) * d1pdf
+
+	vt := volatility * (sqt)
+	d1 := d1f(underlying, strike, timeToExpiration, volatility, riskFreeInterest, dividend, vt)
 	d2 := d2f(d1, vt)
 	var nd1, nd2 float64
 
@@ -118,35 +116,34 @@ func BSTheta(otype string, s float64, k float64, t float64, v float64, r float64
 	nd1 = Stdnorm.Cdf(d1)
 	nd2 = Stdnorm.Cdf(d2)
 
-	p2 := -sign * r * k * dr * nd2
-	p3 := sign * q * s * drq * nd1
+	p2 := -sign * riskFreeInterest * strike * dr * nd2
+	p3 := sign * dividend * underlying * drq * nd1
 	theta := (p1 + p2 + p3) / 365
 	return theta
 }
 
-func BSRho(otype string, s float64, k float64, t float64, v float64, r float64, q float64) float64 {
+func BSRho(callType bool, underlying float64, strike float64, timeToExpiration float64, volatility float64, riskFreeInterest float64, dividend float64) float64 {
 	var sign float64
-	if "P" == otype {
+	if !callType {
 		sign = -1
-	}
-	if "C" == otype {
+	} else {
 		sign = 1
 	}
 
-	dr := math.Exp(-r * t)
-	p1 := sign * (k * t * dr) / 100
+	dr := math.Exp(-riskFreeInterest * timeToExpiration)
+	p1 := sign * (strike * timeToExpiration * dr) / 100
 
-	vt := (v * (math.Sqrt(t)))
-	d1 := d1f(s, k, t, v, r, q, vt)
+	vt := volatility * (math.Sqrt(timeToExpiration))
+	d1 := d1f(underlying, strike, timeToExpiration, volatility, riskFreeInterest, dividend, vt)
 	d2 := sign * d2f(d1, vt)
 	nd2 := Stdnorm.Cdf(d2)
 	rho := p1 * nd2
 	return rho
 }
 
-func BSImpliedVol(otype string, p float64, s float64, k float64, t float64, v float64, r float64, q float64) float64 {
-	if v > 0 == false {
-		v = 0.5
+func BSImpliedVol(callType bool, lastTradedPrice float64, underlying float64, strike float64, timeToExpiration float64, startAnchorVolatility float64, riskFreeInterest float64, dividend float64) float64 {
+	if startAnchorVolatility > 0 == false {
+		startAnchorVolatility = 0.5
 	}
 	errlim := IVPrecision
 	maxl := 100
@@ -155,14 +152,14 @@ func BSImpliedVol(otype string, p float64, s float64, k float64, t float64, v fl
 	maxloops := 100
 
 	for ; math.Abs(dv) > errlim && n < maxl; n++ {
-		difval := PriceBlackScholes(otype, s, k, t, v, r, q) - p
-		v1 := BSVega(s, k, v, t, r, q) / 0.01
+		difval := PriceBlackScholes(callType, underlying, strike, timeToExpiration, startAnchorVolatility, riskFreeInterest, dividend) - lastTradedPrice
+		v1 := BSVega(underlying, strike, timeToExpiration, startAnchorVolatility, riskFreeInterest, dividend) / 0.01
 		dv = difval / v1
-		v = v - dv
+		startAnchorVolatility = startAnchorVolatility - dv
 	}
 	var iv float64
 	if n < maxloops {
-		iv = v
+		iv = startAnchorVolatility
 	} else {
 		iv = math.NaN()
 	}
