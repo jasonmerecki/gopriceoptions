@@ -12,12 +12,12 @@ func PriceBlackScholes(callType bool, underlying float64, strike float64, timeTo
 	var sign float64
 	if callType {
 		if timeToExpiration <= 0 {
-			return math.Abs(underlying - strike)
+			return math.Max(0, underlying - strike)
 		}
 		sign = 1
 	} else {
 		if timeToExpiration <= 0 {
-			return math.Abs(strike - underlying)
+			return math.Max(0, strike - underlying)
 		}
 		sign = -1
 	}
